@@ -1,42 +1,51 @@
 import { tool as createTool } from 'ai';
 import { z } from 'zod';
 
-export const weatherTool = createTool({
-  description: 'Display the weather for a location',
+// Type for UI specifications
+interface UISpec {
+  component: string;
+  props?: Record<string, unknown>;
+  children?: UISpec[] | string;
+}
+
+// Base schema for UI specifications
+const baseUISpecSchema = z.object({
+  component: z.string().describe('The component name'),
+  props: z.record(z.string(), z.unknown()).optional().describe('Props to pass to the component'),
+  children: z.any().optional().describe('Child components or text content'),
+});
+
+export const renderUITool = createTool({
+  description: `Render a dynamic UI component using shadcn/ui components.
+
+Available components:
+- Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter
+- Badge, Button, Progress, Separator, Alert, AlertTitle, AlertDescription
+
+HTML elements: div, span, p, h1, h2, h3, h4, h5, h6, ul, ol, li, strong, em
+
+Example:
+{
+  "component": "Card",
+  "props": { "className": "w-full max-w-md" },
+  "children": [
+    { "component": "CardHeader", "children": [
+      { "component": "CardTitle", "children": "Title" }
+    ]},
+    { "component": "CardContent", "children": [
+      { "component": "p", "children": "Content here" }
+    ]}
+  ]
+}`,
   inputSchema: z.object({
-    location: z.string().describe('The location to get the weather for'),
+    ui: baseUISpecSchema.describe('The UI specification to render'),
+    title: z.string().optional().describe('A brief title describing what this UI shows'),
   }),
-  execute: async function ({ location }: { location: string }) {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Mock weather data - in production, call a real weather API
-    const mockWeatherData: Record<
-      string,
-      { weather: string; temperature: number; humidity: number }
-    > = {
-      'new york': { weather: 'Partly Cloudy', temperature: 72, humidity: 65 },
-      'san francisco': { weather: 'Foggy', temperature: 58, humidity: 85 },
-      london: { weather: 'Rainy', temperature: 52, humidity: 90 },
-      tokyo: { weather: 'Sunny', temperature: 78, humidity: 55 },
-      paris: { weather: 'Cloudy', temperature: 62, humidity: 70 },
-      sydney: { weather: 'Sunny', temperature: 82, humidity: 45 },
-    };
-
-    const normalizedLocation = location.toLowerCase();
-    const data = mockWeatherData[normalizedLocation] || {
-      weather: 'Sunny',
-      temperature: 75,
-      humidity: 60,
-    };
-
-    return {
-      ...data,
-      location,
-    };
+  execute: async function (input: { ui: UISpec; title?: string }) {
+    return { ui: input.ui, title: input.title };
   },
 });
 
 export const tools = {
-  displayWeather: weatherTool,
+  renderUI: renderUITool,
 };

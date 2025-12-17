@@ -2,7 +2,9 @@
 
 import { useChat } from '@ai-sdk/react';
 import { useState } from 'react';
-import { Weather } from '@/components/weather';
+import { UIRenderer, UIRendererLoading, UISpec } from '@/components/ui-renderer';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export default function Page() {
   const [input, setInput] = useState('');
@@ -17,18 +19,26 @@ export default function Page() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b px-4 py-3">
-        <h1 className="text-xl font-semibold text-gray-800">Weather Assistant</h1>
-        <p className="text-sm text-gray-500">Ask me about the weather anywhere!</p>
+      <header className="border-b px-4 py-3">
+        <h1 className="text-xl font-semibold">Generative UI Assistant</h1>
+        <p className="text-sm text-muted-foreground">
+          Ask me anything - I&apos;ll create dynamic UI to show you the answer
+        </p>
       </header>
 
       {/* Messages Container */}
       <main className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
-          <div className="text-center text-gray-500 mt-8">
-            <p>Try asking: &quot;What&apos;s the weather in New York?&quot;</p>
+          <div className="text-center text-muted-foreground mt-8 space-y-2">
+            <p>Try asking:</p>
+            <ul className="space-y-1 text-sm">
+              <li>&quot;What&apos;s the weather in Tokyo?&quot;</li>
+              <li>&quot;Show me a comparison of programming languages&quot;</li>
+              <li>&quot;Create a user profile card&quot;</li>
+              <li>&quot;Display some sample data in a table&quot;</li>
+            </ul>
           </div>
         )}
 
@@ -38,9 +48,9 @@ export default function Page() {
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[80%] ${
+              className={`max-w-[85%] ${
                 message.role === 'user'
-                  ? 'bg-blue-500 text-white rounded-2xl rounded-br-md px-4 py-2'
+                  ? 'bg-primary text-primary-foreground rounded-2xl rounded-br-md px-4 py-2'
                   : 'space-y-3'
               }`}
             >
@@ -53,68 +63,35 @@ export default function Page() {
                   return (
                     <div
                       key={index}
-                      className="bg-white rounded-2xl rounded-bl-md px-4 py-2 shadow-sm"
+                      className="bg-muted rounded-2xl rounded-bl-md px-4 py-2"
                     >
                       {part.text}
                     </div>
                   );
                 }
 
-                // Handle weather tool parts
-                if (part.type === 'tool-displayWeather') {
+                // Handle renderUI tool parts
+                if (part.type === 'tool-renderUI') {
                   switch (part.state) {
                     case 'input-available':
-                      return (
-                        <div
-                          key={index}
-                          className="bg-white rounded-xl p-4 shadow-sm animate-pulse"
-                        >
-                          <div className="flex items-center gap-2 text-gray-500">
-                            <svg
-                              className="w-5 h-5 animate-spin"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              />
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                              />
-                            </svg>
-                            <span>
-                              Getting weather for{' '}
-                              {(part.input as { location: string })?.location}...
-                            </span>
-                          </div>
-                        </div>
-                      );
+                      return <UIRendererLoading key={index} />;
                     case 'output-available':
+                      const output = part.output as { ui: UISpec; title?: string };
                       return (
-                        <Weather
-                          key={index}
-                          {...(part.output as {
-                            location: string;
-                            weather: string;
-                            temperature: number;
-                            humidity: number;
-                          })}
-                        />
+                        <div key={index} className="space-y-2">
+                          {output.title && (
+                            <p className="text-sm text-muted-foreground">{output.title}</p>
+                          )}
+                          <UIRenderer spec={output.ui} />
+                        </div>
                       );
                     case 'output-error':
                       return (
                         <div
                           key={index}
-                          className="bg-red-50 text-red-600 rounded-xl p-4"
+                          className="bg-destructive/10 text-destructive rounded-xl p-4"
                         >
-                          Error loading weather: {part.errorText}
+                          Error rendering UI: {part.errorText}
                         </div>
                       );
                     default:
@@ -130,11 +107,11 @@ export default function Page() {
 
         {isLoading && messages.length > 0 && (
           <div className="flex justify-start">
-            <div className="bg-white rounded-2xl rounded-bl-md px-4 py-2 shadow-sm">
+            <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-2">
               <div className="flex gap-1">
-                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.1s]" />
-                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+                <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" />
+                <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:0.1s]" />
+                <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:0.2s]" />
               </div>
             </div>
           </div>
@@ -142,23 +119,19 @@ export default function Page() {
       </main>
 
       {/* Input Form */}
-      <form onSubmit={handleSubmit} className="border-t bg-white p-4">
+      <form onSubmit={handleSubmit} className="border-t p-4">
         <div className="flex gap-2 max-w-4xl mx-auto">
-          <input
+          <Input
             type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
-            placeholder="Ask about the weather..."
-            className="flex-1 border rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Ask me anything..."
             disabled={isLoading}
+            className="flex-1"
           />
-          <button
-            type="submit"
-            disabled={isLoading || !input.trim()}
-            className="bg-blue-500 text-white rounded-full px-6 py-2 font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
+          <Button type="submit" disabled={isLoading || !input.trim()}>
             Send
-          </button>
+          </Button>
         </div>
       </form>
     </div>
