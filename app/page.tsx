@@ -4,6 +4,7 @@ import { useChat } from '@ai-sdk/react';
 import { useState, useMemo, useEffect } from 'react';
 import { UIRenderer, UISpec } from '@/components/ui-renderer';
 import { parse as parsePartialJson } from 'partial-json';
+import { Streamdown } from 'streamdown';
 
 // Parse text content and extract UI blocks and text segments
 function parseContent(text: string): Array<{ type: 'text' | 'ui'; content: string }> {
@@ -174,9 +175,9 @@ export default function Page() {
               {parsedContent.map((part, index) => {
                 if (part.type === 'text') {
                   return (
-                    <p key={index} className="text-center text-lg font-light text-foreground/80 leading-relaxed">
-                      {part.content}
-                    </p>
+                    <div key={index} className="text-center text-lg font-light text-foreground/80 leading-relaxed prose prose-neutral dark:prose-invert prose-p:my-2 prose-headings:font-light max-w-none">
+                      <Streamdown>{part.content}</Streamdown>
+                    </div>
                   );
                 }
 
