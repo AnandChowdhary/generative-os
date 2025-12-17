@@ -46,7 +46,17 @@ const componentRegistry: Record<string, AnyComponent> = {
 const htmlElements = ['div', 'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'strong', 'em'];
 
 function renderUISpec(spec: UISpec, key?: string | number): React.ReactNode {
+  // Guard against incomplete specs during streaming
+  if (!spec || typeof spec !== 'object') {
+    return null;
+  }
+
   const { component, props = {}, children } = spec;
+
+  // Guard against missing component name during streaming
+  if (!component || typeof component !== 'string') {
+    return null;
+  }
 
   // Handle text nodes
   if (component === 'text' && typeof children === 'string') {
@@ -56,9 +66,11 @@ function renderUISpec(spec: UISpec, key?: string | number): React.ReactNode {
   // Handle HTML elements
   if (htmlElements.includes(component)) {
     const childContent = Array.isArray(children)
-      ? children.map((child, index) =>
-          typeof child === 'string' ? child : renderUISpec(child, index)
-        )
+      ? children.map((child, index) => {
+          if (typeof child === 'string') return child;
+          if (child && typeof child === 'object') return renderUISpec(child, index);
+          return null;
+        }).filter(Boolean)
       : children;
 
     return React.createElement(
@@ -71,19 +83,21 @@ function renderUISpec(spec: UISpec, key?: string | number): React.ReactNode {
   // Handle registered components
   const Component = componentRegistry[component];
   if (!Component) {
-    console.warn(`Unknown component: ${component}`);
+    // During streaming, unknown components are expected - fail silently
     return null;
   }
 
-  // Render children
+  // Render children with streaming-safe handling
   let renderedChildren: React.ReactNode = null;
   if (children) {
     if (typeof children === 'string') {
       renderedChildren = children;
     } else if (Array.isArray(children)) {
-      renderedChildren = children.map((child, index) =>
-        typeof child === 'string' ? child : renderUISpec(child, index)
-      );
+      renderedChildren = children.map((child, index) => {
+        if (typeof child === 'string') return child;
+        if (child && typeof child === 'object') return renderUISpec(child, index);
+        return null;
+      }).filter(Boolean);
     }
   }
 

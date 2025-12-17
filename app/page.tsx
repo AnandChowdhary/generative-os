@@ -99,6 +99,19 @@ export default function Page() {
                   if (part.type === 'tool-renderUI') {
                     switch (part.state) {
                       case 'input-available':
+                        // Stream the UI as it's being generated
+                        const input = part.input as { ui?: UISpec; title?: string };
+                        if (input?.ui) {
+                          return (
+                            <div key={index} className="flex justify-center animate-in fade-in duration-300">
+                              <div className="relative">
+                                <UIRenderer spec={input.ui} />
+                                {/* Subtle streaming indicator */}
+                                <div className="absolute -top-2 -right-2 w-3 h-3 rounded-full bg-gradient-to-r from-violet-500 to-pink-500 animate-pulse" />
+                              </div>
+                            </div>
+                          );
+                        }
                         return (
                           <div key={index} className="flex justify-center">
                             <UIRendererLoading />
@@ -107,7 +120,7 @@ export default function Page() {
                       case 'output-available':
                         const output = part.output as { ui: UISpec; title?: string };
                         return (
-                          <div key={index} className="flex justify-center">
+                          <div key={index} className="flex justify-center animate-in fade-in duration-300">
                             <UIRenderer spec={output.ui} />
                           </div>
                         );
