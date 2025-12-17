@@ -61,11 +61,17 @@ export default function Page() {
     return () => clearInterval(timer);
   }, []);
 
-  // Get only the last user message and the last assistant message
+  // Get only the last user message and the corresponding assistant message
   const lastMessages = useMemo(() => {
     const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
     const lastAssistantMsg = [...messages].reverse().find(m => m.role === 'assistant');
-    return { user: lastUserMsg, assistant: lastAssistantMsg };
+
+    // Only show assistant message if it comes after the last user message
+    const userIndex = lastUserMsg ? messages.indexOf(lastUserMsg) : -1;
+    const assistantIndex = lastAssistantMsg ? messages.indexOf(lastAssistantMsg) : -1;
+    const showAssistant = assistantIndex > userIndex;
+
+    return { user: lastUserMsg, assistant: showAssistant ? lastAssistantMsg : undefined };
   }, [messages]);
 
   // Get the full text from the assistant message
