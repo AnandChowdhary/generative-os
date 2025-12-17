@@ -102,19 +102,24 @@ export function UIRenderer({ spec }: UIRendererProps) {
   return <>{renderUISpec(spec)}</>;
 }
 
-// Loading state component
+// Loading state component - matches the thinking orb style
 export function UIRendererLoading() {
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <Skeleton className="h-6 w-3/4" />
-        <Skeleton className="h-4 w-1/2" />
-      </CardHeader>
-      <CardContent className="space-y-2">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-5/6" />
-        <Skeleton className="h-4 w-4/6" />
-      </CardContent>
-    </Card>
+    <div className="flex flex-col items-center gap-6 animate-float py-8">
+      <div className="relative flex items-center justify-center">
+        {/* Ripple effects */}
+        <div className="absolute w-20 h-20 rounded-full bg-gradient-to-r from-violet-400/30 to-pink-400/30 animate-ripple" />
+        <div className="absolute w-20 h-20 rounded-full bg-gradient-to-r from-violet-400/20 to-pink-400/20 animate-ripple" style={{ animationDelay: '0.5s' }} />
+
+        {/* Main orb */}
+        <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-violet-500 via-purple-500 to-pink-500 animate-breathe animate-glow flex items-center justify-center">
+          <div className="absolute inset-1 rounded-full bg-gradient-to-tr from-white/40 to-transparent" />
+          <div className="w-6 h-6 rounded-full bg-white/50 backdrop-blur-sm" />
+        </div>
+      </div>
+      <p className="text-sm text-muted-foreground/70 tracking-wide">
+        creating...
+      </p>
+    </div>
   );
 }
